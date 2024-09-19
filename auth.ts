@@ -22,18 +22,33 @@ export const { auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
+          .object({
+            email: z.string().email(),
+            password: z.string().min(6),
+          })
           .safeParse(credentials);
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
-          if (!user) return null;
-          const passwordsMatch = await bcrypt.compare(password, user.password);
-          if (passwordsMatch) return user;
 
-          console.log("Invalid credentials");
-          return null;
+        if (parsedCredentials.success) {
+          console.log("[auth.ts] - parsed success");
+          const { email, password } = parsedCredentials.data;
+          console.log(`[auth.ts] - parsed success ${email} ${password}`);
+          const user = await getUser(email);
+          if (!user) {
+            console.log("HERE??");
+            return null;
+          }
+
+          console.log(`[auth.ts] - users ${user.email} ${user.password}`);
+          const passwordsMatch = await bcrypt.compare(password, user.password);
+
+          if (passwordsMatch) {
+            console.log(`[auth.ts] - users matched`);
+            return user;
+          }
         }
+
+        console.log("Invalid credentials");
+        return null;
       },
     }),
   ],
